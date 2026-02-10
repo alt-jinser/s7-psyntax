@@ -50,6 +50,12 @@
         (hash-table-set! props key #f))
     #f))
 
+(define s7-gensym gensym)
+(define (gensym x)
+  (cond
+    ((symbol? x) (s7-gensym (symbol->string x)))
+    (else        (s7-gensym x))))
+
 
 ;; API provided by psyntax
 (define $sc-put-cte             #f)
@@ -58,6 +64,7 @@
 (define environment?            #f)
 (define interaction-environment #f)
 (define identifier?             #f)
+(define unwrap-syntax           #f)
 (define syntax->list            #f)
 (define syntax-object->datum    #f)
 (define datum->syntax-object    #f)
@@ -71,15 +78,19 @@
 (define syntax->vector          #f)
 
 (set! (*s7* 'symbol-quote?) #t)
-(set! *#readers* (list (cons #\_ (lambda (str) (string->symbol (substring str 1))))))
 
 (define %primitive-eval eval)
 (define %primitive-load load)
 
-(define (eval expr)
-  (%primitive-eval (sc-expand expr)))
+(define (eval expr . env)
+  (let ((target-env (if (pair? env) (car env) (rootlet))))
+    (if (and (pair? expr)
+             (equal? (car expr) "noexpand"))
+        (%primitive-eval (cadr expr) target-env)
+        (%primitive-eval expr target-env))))
 
-(load "psyntax.pp")
+; (load "psyntax.pp")
+(load "readevalprintloop-psyntax-7.3.pp")
 
 
 
@@ -93,7 +104,7 @@
             (let loop ((expr (read)))
               (if (eof-object? expr)
                   (begin
-                    (let ((expanded (sc-expand `(begin ,@(reverse forms)))))
+                    (let ((expanded (sc-expand `(begin ,@(reverse forms)) #f '(L C) '(L))))
                       (display "--- ") (display `(begin ,@(reverse forms))) (newline)
                       (display "... ") (display expanded) (newline)
                       (eval expanded)))
