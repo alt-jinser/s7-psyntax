@@ -2,6 +2,25 @@
 s7 boot.scm
 ```
 
+### Module Bug
+
+```scheme
+(module T (no_access)
+  (define no_access #t))
+
+(module B (b)
+  (import T) ; FIXME
+  (define b #t))
+
+(module C ()
+  (import B)
+  (display no_access) ; print #t
+  (display b))        ; unbound variable b
+```
+
+只要 module 有 `(import)`，那么其自身的符号就会被覆盖。例如这里的 b 访问不到，而 no_access 可以。
+这显然不是预期的，这导致代码库无法被正确引导。
+
 ### (E), (E)
 ```scheme
 (begin (begin (define _0 (void))

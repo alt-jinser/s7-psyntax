@@ -30,6 +30,7 @@
 (define *symbol-properties* (make-hash-table))
 
 (define (putprop symbol key value)
+  ; (format #t "[put] ~S . ~S\n" symbol key)
   (let ((props (hash-table-ref *symbol-properties* symbol)))
     (if props
         (hash-table-set! props key value)
