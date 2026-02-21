@@ -114,6 +114,6 @@
                     (loop (read))))))))
       (error 'load (string-append "file not found: " filename))))
 
-(load "x.scm")
+(load "module-bug.scm")
 
 ; (load "psyntax.ss")
