@@ -1,0 +1,70 @@
+(define (eval x)
+  ((@ (guile) eval) (cadr x) ((@ (guile) interaction-environment))))
+
+(define (gensym id)
+  ((@ (guile) gensym) (string-append "lexical-" (symbol->string id) "-")))
+
+(define (gensym? sym)
+  (and (symbol? sym)
+       (string-prefix? "lexical-" (symbol->string sym))))
+
+(define (error who format-string why what)
+  ((@ (guile) error) (format #f format-string why what)))
+
+(define putprop set-object-property!)
+
+(define getprop object-property)
+
+(define (remprop sym key)
+  (let ((props (object-properties sym)))
+    (set-object-properties! sym (filter (lambda (pair)
+                                          (eq? (car pair) sym))
+                                        props))))
+
+(define void (lambda () (if #f #f)))
+
+(define andmap
+  (lambda (f first . rest)
+    (or (null? first)
+        (if (null? rest)
+            (let andmap ((first first))
+              (let ((x (car first)) (first (cdr first)))
+                (if (null? first)
+                    (f x)
+                    (and (f x) (andmap first)))))
+            (let andmap ((first first) (rest rest))
+              (let ((x (car first))
+                    (xr (map car rest))
+                    (first (cdr first))
+                    (rest (map cdr rest)))
+                (if (null? first)
+                    (apply f (cons x xr))
+                    (and (apply f (cons x xr)) (andmap first rest)))))))))
+
+(define ormap
+  (lambda (proc list1)
+    (and (not (null? list1))
+         (or (proc (car list1)) (ormap proc (cdr list1))))))
+
+(define (annotation-expression aexpr) aexpr)
+(define (annotation-stripped aexpr) aexpr)
+
+(define $sc-put-cte #f)
+(define sc-expand #f)
+(define $make-environment #f)
+(define environment? #f)
+(define interaction-environment #f)
+(define identifier? #f)
+(define unwrap-syntax #f)
+(define syntax-object->datum #f)
+(define datum->syntax-object #f)
+(define generate-temporaries #f)
+(define free-identifier=? #f)
+(define bound-identifier=? #f)
+(define literal-identifier=? #f)
+(define syntax-error #f)
+(define $syntax-dispatch #f)
+
+
+(load-from-path "./psyntax-7.3.pp")
+
