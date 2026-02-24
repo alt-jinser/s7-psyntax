@@ -1,3 +1,5 @@
+(load "write.scm")
+
 (define (void) (if #f #f))
 
 (define (andmap f first . rest)
@@ -90,6 +92,11 @@
         (%primitive-eval (cadr expr) target-env)
         (%primitive-eval expr target-env))))
 
+(load "debug.scm")
+(set! (*s7* 'debug) 1)
+(set! (*s7* 'safety) 2)
+(set! (debug-port) *stderr*)
+
 ; (load "psyntax.pp")
 (load "readevalprintloop-psyntax-7.3.pp")
 
@@ -105,15 +112,20 @@
             (let loop ((expr (read)))
               (if (eof-object? expr)
                   (begin
-                    (let ((expanded (sc-expand `(begin ,@(reverse forms)) #f '(L C) '(L))))
-                      (display "--- ") (display `(begin ,@(reverse forms))) (newline)
-                      (display "... ") (display expanded) (newline)
+                    (let ((expanded (sc-expand `(begin ,@(reverse forms)) #f '(E) '(E))))
+                      (display expanded) (newline)
                       (eval expanded)))
                   (begin
                     (set! forms (cons expr forms))
                     (loop (read))))))))
       (error 'load (string-append "file not found: " filename))))
 
-(load "module-bug.scm")
+(dynamic-wind
+  #f
+  (lambda () (load "module-bug.scm"))
+  (lambda ()
+    (newline)
+    ; (display *symbol-properties*)
+    (newline)))
 
 ; (load "psyntax.ss")
