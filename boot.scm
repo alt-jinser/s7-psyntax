@@ -1,5 +1,3 @@
-(load "write.scm")
-
 (define (void) (if #f #f))
 
 (define (andmap f first . rest)
@@ -91,11 +89,6 @@
              (equal? (car expr) "noexpand"))
         (%primitive-eval (cadr expr) target-env)
         (%primitive-eval expr target-env))))
-
-(load "debug.scm")
-(set! (*s7* 'debug) 1)
-(set! (*s7* 'safety) 2)
-(set! (debug-port) *stderr*)
 
 ; (load "psyntax.pp")
 (load "readevalprintloop-psyntax-7.3.pp")
