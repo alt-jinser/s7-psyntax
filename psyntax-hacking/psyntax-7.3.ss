@@ -2572,17 +2572,18 @@
                  " in output of macro"))
               (else x))))
     (rebuild-macro-output
-      (let ((out (p (source-wrap e (anti-mark w) ae))))
-        (if (procedure? out)
-          (begin
-            (display "orig-pass: ") (display (source-wrap e (anti-mark w) ae)) (newline)
-            ; (display "out: ") (pretty-print (object->let out)) (newline)
-            (out (lambda (id)
-                   (unless (identifier? id)
-                     (syntax-error id "environment argument is not an identifier"))
-                   (lookup (id-var-name id empty-wrap) r))))
-          out))
+      (call-or-value (p (source-wrap e (anti-mark w) ae))
+                     (lambda (id)
+                       (unless (identifier? id)
+                         (syntax-error id "environment argument is not an identifier"))
+                       (lookup (id-var-name id empty-wrap) r)))
       (new-mark))))
+
+(define call-or-value
+  (lambda (p/v arg)
+    (if (procedure? p/v)
+      (p/v arg)
+      p/v)))
 
 (define chi-body
   (lambda (body outer-form r mr w m?)
