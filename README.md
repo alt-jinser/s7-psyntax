@@ -4,6 +4,8 @@ s7 boot.scm
 
 ### Module Bug
 
+> resolved, need to records/explains
+
 ```scheme
 (module T (no_access)
   (define no_access #t))
