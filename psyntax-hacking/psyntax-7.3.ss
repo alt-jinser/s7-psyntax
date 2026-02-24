@@ -1633,12 +1633,6 @@
              (let* ((n (id-var-name first w))
                     (b (lookup n r))
                     (type (binding-type b)))
-                  ; (display "=== syntax-type ===") (newline)
-                  ; (display "n: ") (display n) (newline)
-                  ; (display "b: ") (display b) (newline)
-                  ; (display "bv: ") (display (binding-value b)) (newline)
-                  ; (display "type: ") (display type) (newline)
-                  ; (display "===================") (newline)
                (case type
                  ((lexical) (values 'lexical-call (binding-value b) e w ae))
                  ((macro macro!)
@@ -2137,43 +2131,11 @@
                          (append (get-implicit-exports id) (module-binding-imps b))
                          (module-binding-val b)))))
                bindings))))
-    (define parse-top? #t)
-    ; (display ribcage) (newline)
-    ; (display "source-exp: ") (display source-exp) (newline)
-    ; (display body) (newline)
-    ; (display r) (newline)
-    ; (display mr) (newline)
-    ; (display ctem) (newline)
-    ; (display exports) (newline)
-    ; (display fexports) (newline)
-    ; (display meta-residualize!) (newline)
-    ; (newline)
     (let parse ((body body) (r r) (mr mr) (ids '()) (bindings '()) (inits '()) (meta-seen? #f))
       (if (null? body)
           (return r mr bindings ids inits)
           (let* ((fr (car body)) (e (frob-e fr)) (meta? (frob-meta? fr)))
-      ; (display e) (newline)
-      ; (if parse-top?
-      ;   (begin (set! parse-top? #f) (display "top!\n"))
-      ;   (display "nested!\n"))
-
-                 ; (display "=== begin-form body ===") (newline)
-                 ; (display e) (newline)
-                 ; (display "=======================") (newline)
-
             (let-values (((type value e w ae) (syntax-type e r empty-wrap no-source ribcage)))
-                  ; (display fr) (newline)
-                  ; (display e) (newline)
-                  ; (display meta?) (newline)
-                  ; (display type) (newline)
-                  ; (display value) (newline)
-                  ; (display e) (newline)
-                  ; (display w) (newline)
-                  ; (display ae) (newline)
-                  ; (newline)
-      ; (display type) (newline)
-      ; (display "-- end --") (newline)
-      ; (newline)
               (case type
                 ((define-form)
                  (let-values (((id rhs w) (parse-define e w ae)))
@@ -2246,9 +2208,6 @@
                              #f)))))))
                (($import-form)
                 (let-values (((orig only? mid) (parse-import e w ae)))
-                  ; (display orig) (newline)
-                  ; (display only?) (newline)
-                  ; (newline)
                   (let ((mlabel (id-var-name mid empty-wrap)))
                     (let ((binding (lookup mlabel r)))
                       (case (binding-type binding)
@@ -2277,9 +2236,6 @@
                       inits
                       #f))))
                 ((begin-form)
-                 ; (display "=== begin-form body ===") (newline)
-                 ; (display e) (newline)
-                 ; (display "=======================") (newline)
                  (parse (let f ((forms (parse-begin e w ae #t)))
                           (if (null? forms)
                               (cdr body)
@@ -2572,18 +2528,15 @@
                  " in output of macro"))
               (else x))))
     (rebuild-macro-output
-      (call-or-value (p (source-wrap e (anti-mark w) ae))
-                     (lambda (id)
-                       (unless (identifier? id)
-                         (syntax-error id "environment argument is not an identifier"))
-                       (lookup (id-var-name id empty-wrap) r)))
+      (let ((out (p (source-wrap e (anti-mark w) ae))))
+        (if (procedure? out)
+            (out (lambda (id)
+                   (unless (identifier? id)
+                     (syntax-error id
+                       "environment argument is not an identifier"))
+                   (lookup (id-var-name id empty-wrap) r)))
+            out))
       (new-mark))))
-
-(define call-or-value
-  (lambda (p/v arg)
-    (if (procedure? p/v)
-      (p/v arg)
-      p/v)))
 
 (define chi-body
   (lambda (body outer-form r mr w m?)
@@ -3505,8 +3458,6 @@
           (else (syntax-error m "unknown module"))))))
   (define $import-help
     (lambda (orig import-only?)
-      (define counter 0)
-      (display "ENTERING $IMPORT-HELP") (newline)
       (lambda (r)
         (define difference
           (lambda (ls1 ls2)
@@ -3631,10 +3582,6 @@
         (define modspec*
           (lambda (m)
             (let-values (((mid d exports) (modspec m #f))) d)))
-        (display "orig-in-case: ") (display orig) (newline)
-        (display "counter: ")      (display counter) (newline)
-        (set! counter (+ 1 counter))
-        (newline)
         (syntax-case orig ()
           ((_ m ...)
            (with-syntax (((d ...) (map modspec* (syntax (m ...)))))
@@ -3642,10 +3589,7 @@
 
   (put-cte-hook 'import
     (lambda (orig)
-      (display "orig-before: ") (display orig) (newline)
-      (let ((r ($import-help orig #f)))
-        (display "orig-after: ") (display orig) (newline)
-        r)))
+      ($import-help orig #f)))
   
   (put-cte-hook 'import-only
     (lambda (orig)
