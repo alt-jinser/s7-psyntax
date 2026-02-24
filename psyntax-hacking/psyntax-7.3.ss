@@ -3504,8 +3504,6 @@
           (else (syntax-error m "unknown module"))))))
   (define $import-help
     (lambda (orig import-only?)
-      (define counter 0)
-      (display "ENTERING $IMPORT-HELP") (newline)
       (lambda (r)
         (define difference
           (lambda (ls1 ls2)
@@ -3630,10 +3628,6 @@
         (define modspec*
           (lambda (m)
             (let-values (((mid d exports) (modspec m #f))) d)))
-        (display "orig-in-case: ") (display orig) (newline)
-        (display "counter: ")      (display counter) (newline)
-        (set! counter (+ 1 counter))
-        (newline)
         (syntax-case orig ()
           ((_ m ...)
            (with-syntax (((d ...) (map modspec* (syntax (m ...)))))
@@ -3641,9 +3635,7 @@
 
   (put-cte-hook 'import
     (lambda (orig)
-      (display "orig-before: ") (display orig) (newline)
       (let ((r ($import-help orig #f)))
-        (display "orig-after: ") (display orig) (newline)
         r)))
   
   (put-cte-hook 'import-only
